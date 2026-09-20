@@ -16,6 +16,7 @@ if [ -z "${NANOCHAT_BASE_DIR:-}" ]; then
     fi
 fi
 export NANOCHAT_BASE_DIR
+export HF_ENDPOINT="${HF_ENDPOINT:-https://hf-mirror.com}"
 export OMP_NUM_THREADS=1
 mkdir -p "$NANOCHAT_BASE_DIR"
 

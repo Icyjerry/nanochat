@@ -16,10 +16,12 @@ if [ -z "${NANOCHAT_BASE_DIR:-}" ]; then
     fi
 fi
 export NANOCHAT_BASE_DIR
+export HF_ENDPOINT="${HF_ENDPOINT:-https://hf-mirror.com}"
 export OMP_NUM_THREADS=1
 mkdir -p "$NANOCHAT_BASE_DIR"
 
 echo "NANOCHAT_BASE_DIR=$NANOCHAT_BASE_DIR"
+echo "HF_ENDPOINT=$HF_ENDPOINT"
 echo "git commit: $(git rev-parse HEAD)"
 git rev-parse HEAD > "$NANOCHAT_BASE_DIR/git_commit.txt"
 git status --short > "$NANOCHAT_BASE_DIR/git_status.txt" || true

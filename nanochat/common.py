@@ -79,6 +79,17 @@ def get_base_dir():
     os.makedirs(nanochat_dir, exist_ok=True)
     return nanochat_dir
 
+def get_hf_endpoint():
+    """Hub host. Set HF_ENDPOINT=https://hf-mirror.com in China / AutoDL."""
+    return os.environ.get("HF_ENDPOINT", "https://huggingface.co").rstrip("/")
+
+def hf_url(path_or_url):
+    """Build or rewrite a HuggingFace URL using HF_ENDPOINT."""
+    endpoint = get_hf_endpoint()
+    if path_or_url.startswith("http://") or path_or_url.startswith("https://"):
+        return path_or_url.replace("https://huggingface.co", endpoint).replace("http://huggingface.co", endpoint)
+    return f"{endpoint}/{path_or_url.lstrip('/')}"
+
 def download_file_with_lock(url, filename, postprocess_fn=None):
     """
     Downloads a file from a URL to a local path in the base directory.

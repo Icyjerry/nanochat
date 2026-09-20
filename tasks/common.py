@@ -15,7 +15,7 @@ import pyarrow as pa
 import pyarrow.parquet as pq
 from filelock import FileLock
 
-from nanochat.common import get_base_dir
+from nanochat.common import get_base_dir, hf_url
 
 
 class HubDataset:
@@ -60,12 +60,13 @@ def load_hub_dataset(repo_id, subset="default", split="train"):
             # only a single rank acquires the lock and downloads, the others block
             # here and then skip the download because they recheck the manifest
             if not os.path.exists(manifest_path):
-                listing_url = f"https://huggingface.co/api/datasets/{repo_id}/parquet/{subset}/{split}"
+                listing_url = hf_url(f"api/datasets/{repo_id}/parquet/{subset}/{split}")
                 with urllib.request.urlopen(listing_url) as response:
                     shard_urls = json.loads(response.read())
                 filenames = []
                 for shard_index, shard_url in enumerate(shard_urls):
                     filename = f"{shard_index:05d}.parquet"
+                    shard_url = hf_url(shard_url)
                     print(f"Downloading {shard_url} ...")
                     with urllib.request.urlopen(shard_url) as response:
                         content = response.read()
