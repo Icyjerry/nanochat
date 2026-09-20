@@ -79,25 +79,29 @@ wait "$DATASET_DOWNLOAD_PID"
 # d16 / BF16. window-pattern=L because Blackwell usually has no FA3.
 # target-param-data-ratio=12 is the current master default, pinned so it cannot drift.
 # Fewer GPUs keep the same token budget; gradient accumulation fills the global batch.
-# Do not pass "--run=..." to torchrun: torch 2.12 treats it as --run-path.
+# Use `python -m torch.distributed.run`, not PATH torchrun.
+# AutoDL's torchrun is /root/miniconda3/bin/torchrun and launches conda python,
+# which cannot see venv packages (wandb, rustbpe, tiktoken, pyarrow).
+# Do not pass "--run=..." : torch 2.12 treats it as --run-path.
 # Do not insert "--" after -m: argparse in the child rejects it.
 # Wandb name comes from WANDB_RUN (see scripts).
 LOGDIR="$NANOCHAT_BASE_DIR/torchrun_logs"
 mkdir -p "$LOGDIR"
-torchrun --standalone --nproc_per_node=$NPROC --tee 3 --log-dir "$LOGDIR" -m scripts.base_train \
+TORCHRUN=(python -m torch.distributed.run --standalone --nproc_per_node="$NPROC" --tee 3 --log-dir "$LOGDIR")
+"${TORCHRUN[@]}" -m scripts.base_train \
     --depth=16 \
     --device-batch-size=32 \
     --window-pattern=L \
     --target-param-data-ratio=12
 
-torchrun --standalone --nproc_per_node=$NPROC --tee 3 --log-dir "$LOGDIR" -m scripts.base_eval \
+"${TORCHRUN[@]}" -m scripts.base_eval \
     --device-batch-size=16
 
-torchrun --standalone --nproc_per_node=$NPROC --tee 3 --log-dir "$LOGDIR" -m scripts.chat_sft
-torchrun --standalone --nproc_per_node=$NPROC --tee 3 --log-dir "$LOGDIR" -m scripts.chat_eval -i sft
+"${TORCHRUN[@]}" -m scripts.chat_sft
+"${TORCHRUN[@]}" -m scripts.chat_eval -i sft
 
-torchrun --standalone --nproc_per_node=$NPROC --tee 3 --log-dir "$LOGDIR" -m scripts.chat_rl
-torchrun --standalone --nproc_per_node=$NPROC --tee 3 --log-dir "$LOGDIR" -m scripts.chat_eval -i rl -a GSM8K
+"${TORCHRUN[@]}" -m scripts.chat_rl
+"${TORCHRUN[@]}" -m scripts.chat_eval -i rl -a GSM8K
 
 echo "ALL DONE"
 date -u +"end_utc=%Y-%m-%dT%H:%M:%SZ" | tee -a "$NANOCHAT_BASE_DIR/run_meta.txt"
