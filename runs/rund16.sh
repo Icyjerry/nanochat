@@ -95,3 +95,10 @@ torchrun --standalone --nproc_per_node=$NPROC -m scripts.chat_eval -- -i rl -a G
 echo "ALL DONE"
 date -u +"end_utc=%Y-%m-%dT%H:%M:%SZ" | tee -a "$NANOCHAT_BASE_DIR/run_meta.txt"
 # python -m scripts.chat_cli -i rl -p "What is 15 * 17?"
+
+# 整条成功才关机，省 AutoDL 计费。set -e 下中途失败不会走到这里。
+# 跑完还要留机看日志：NOSHUTDOWN=1 bash runs/rund16.sh
+if [ "${NOSHUTDOWN:-0}" != "1" ]; then
+    echo "shutting down"
+    shutdown -h now
+fi

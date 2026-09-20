@@ -42,6 +42,8 @@ export NANOCHAT_BASE_DIR=/root/autodl-tmp/nanochat-d16
 screen -L -Logfile runs/rund16.log -S d16 bash runs/rund16.sh
 ```
 
+A successful run ends with `shutdown -h now` so AutoDL stops billing. Failures exit earlier (`set -e`) and leave the machine up. To keep the box after success: `NOSHUTDOWN=1 bash runs/rund16.sh`. Do not add shutdown to the no-GPU prep script.
+
 Tokenizer is skipped if `tokenizer.pkl` already exists. Shards that already exist are skipped.
 
 ## Outputs
