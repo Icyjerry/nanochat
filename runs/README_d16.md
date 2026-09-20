@@ -1,4 +1,4 @@
-# d16 AutoDL recipe (4x RTX PRO 6000)
+# d16 AutoDL recipe (2x GPU default)
 
 Python is unchanged from upstream nanochat. These scripts only change launch flags.
 
@@ -17,7 +17,9 @@ Installs the CUDA PyTorch extra (does not need a GPU to install), downloads Clim
 
 HuggingFace downloads use `HF_ENDPOINT` (default `https://hf-mirror.com`). Torch wheels in `uv.lock` point at `download.pytorch.org`; the launch scripts rewrite them to Tsinghua `pytorch-wheels` (and PyPI files to `pypi.tuna.tsinghua.edu.cn`) before `uv sync`. Override with `PYTORCH_WHEEL_MIRROR` / `UV_DEFAULT_INDEX` if needed.
 
-## 4-GPU machine
+## GPU machine (default 2 cards)
+
+`rund16.sh` uses `NPROC=2`. Four cards: `NPROC=4 bash runs/rund16.sh`. Fewer GPUs keep the same token budget via gradient accumulation; wall clock is longer.
 
 Optional short smoke tests (separate tags, does not write into `d16`):
 
@@ -26,7 +28,7 @@ source .venv/bin/activate
 export NANOCHAT_BASE_DIR=/root/autodl-tmp/nanochat-d16
 export OMP_NUM_THREADS=1
 
-torchrun --standalone --nproc_per_node=4 -m scripts.base_train -- \
+torchrun --standalone --nproc_per_node=${NPROC:-2} -m scripts.base_train -- \
     --depth=16 --device-batch-size=32 --window-pattern=L \
     --target-param-data-ratio=12 \
     --num-iterations=20 --core-metric-every=-1 --sample-every=-1 --save-every=-1 \

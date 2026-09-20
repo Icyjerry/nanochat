@@ -1,5 +1,5 @@
 #!/bin/bash
-# d16 + SFT + GSM8K RL on 4x RTX PRO 6000 96GB.
+# d16 + SFT + GSM8K RL. Default 2 GPUs (override with NPROC=4).
 # First formal run is BF16 (no --fp8). Do not auto-fallback if FP8 is added later.
 #
 # bash runs/rund16.sh
@@ -21,7 +21,9 @@ trap restore_uv_lock EXIT
 export OMP_NUM_THREADS=1
 mkdir -p "$NANOCHAT_BASE_DIR"
 
-NPROC=4
+NPROC="${NPROC:-2}"
+export NPROC
+echo "NPROC=$NPROC"
 
 command -v uv &> /dev/null || curl -LsSf https://astral.sh/uv/install.sh | sh
 [ -d ".venv" ] || uv venv
@@ -41,14 +43,17 @@ git status --short > "$NANOCHAT_BASE_DIR/git_status.txt" || true
 date -u +"start_utc=%Y-%m-%dT%H:%M:%SZ" | tee "$NANOCHAT_BASE_DIR/run_meta.txt"
 echo "git_commit=${GIT_SHA}" >> "$NANOCHAT_BASE_DIR/run_meta.txt"
 echo "wandb_run=${WANDB_RUN}" >> "$NANOCHAT_BASE_DIR/run_meta.txt"
+echo "nproc=${NPROC}" >> "$NANOCHAT_BASE_DIR/run_meta.txt"
 
 python - <<'PY'
+import os
 import torch
 n = torch.cuda.device_count()
+want = int(os.environ.get("NPROC", "2"))
 print("PyTorch:", torch.__version__)
 print("CUDA:", torch.version.cuda)
 print("GPU count:", n)
-assert n == 4, f"Expected 4 GPUs, got {n}"
+assert n == want, f"Expected {want} GPUs, got {n}"
 for i in range(n):
     p = torch.cuda.get_device_properties(i)
     print(
