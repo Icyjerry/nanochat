@@ -15,7 +15,7 @@ bash runs/rund16_prep.sh
 
 Installs the CUDA PyTorch extra (does not need a GPU to install), downloads ClimbMix shards, trains the 32k tokenizer.
 
-HuggingFace downloads use `HF_ENDPOINT` (default `https://hf-mirror.com`). Torch wheels in `uv.lock` point at `download.pytorch.org`; the launch scripts rewrite them to Tsinghua `pytorch-wheels` (and PyPI files to `pypi.tuna.tsinghua.edu.cn`) before `uv sync`. Override with `PYTORCH_WHEEL_MIRROR` / `UV_DEFAULT_INDEX` if needed.
+If `python` already has CUDA torch (typical AutoDL conda image, e.g. `2.12.1+cu130`), the scripts skip downloading lockfile `torch==2.9.1+cu128`. Force download with `NANOCHAT_USE_SYSTEM_TORCH=0`. Force conda torch with `NANOCHAT_USE_SYSTEM_TORCH=1`.
 
 ## GPU machine (default 2 cards)
 

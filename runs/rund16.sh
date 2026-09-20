@@ -25,12 +25,7 @@ NPROC="${NPROC:-2}"
 export NPROC
 echo "NPROC=$NPROC"
 
-command -v uv &> /dev/null || curl -LsSf https://astral.sh/uv/install.sh | sh
-[ -d ".venv" ] || uv venv
-rewrite_uv_lock_to_mirrors
-uv sync --extra gpu
-restore_uv_lock
-source .venv/bin/activate
+setup_python_env
 
 if [ -z "${WANDB_RUN:-}" ]; then
     WANDB_RUN=dummy

@@ -31,21 +31,8 @@ git rev-parse HEAD > "$NANOCHAT_BASE_DIR/git_commit.txt"
 git status --short > "$NANOCHAT_BASE_DIR/git_status.txt" || true
 date -u +"prep_start_utc=%Y-%m-%dT%H:%M:%SZ" | tee "$NANOCHAT_BASE_DIR/prep_meta.txt"
 
-command -v uv &> /dev/null || curl -LsSf https://astral.sh/uv/install.sh | sh
-[ -d ".venv" ] || uv venv
-rewrite_uv_lock_to_mirrors
-uv sync --extra gpu
-restore_uv_lock
-source .venv/bin/activate
-
-python - <<'PY'
-import torch
-print("PyTorch:", torch.__version__)
-print("CUDA built:", torch.version.cuda)
-print("cuda.is_available:", torch.cuda.is_available())
-print("GPU count:", torch.cuda.device_count())
-print("prep allows 0 GPUs; rund16.sh will assert 4")
-PY
+command -v uv &> /dev/null || true
+setup_python_env
 
 python -m nanochat.dataset -n 8
 python -m nanochat.dataset -n 170 &
@@ -71,4 +58,4 @@ print("prep OK")
 PY
 
 date -u +"prep_end_utc=%Y-%m-%dT%H:%M:%SZ" | tee -a "$NANOCHAT_BASE_DIR/prep_meta.txt"
-echo "PREP DONE. Boot 4 GPUs and run bash runs/rund16.sh"
+echo "PREP DONE. Then: export NANOCHAT_BASE_DIR=... && bash runs/rund16.sh"
