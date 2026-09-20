@@ -29,7 +29,7 @@ export NANOCHAT_BASE_DIR=/root/autodl-tmp/nanochat-d16
 export OMP_NUM_THREADS=1
 
 torchrun --standalone --nproc_per_node=${NPROC:-2} -m scripts.base_train -- \
-    --depth=16 --device-batch-size=64 --window-pattern=L \
+    --depth=16 --device-batch-size=32 --window-pattern=L \
     --target-param-data-ratio=12 \
     --num-iterations=20 --core-metric-every=-1 --sample-every=-1 --save-every=-1 \
     --model-tag=d16_smoke_bf16 --run=dummy

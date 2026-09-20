@@ -88,11 +88,11 @@ wait "$DATASET_DOWNLOAD_PID"
 LOGDIR="$NANOCHAT_BASE_DIR/torchrun_logs"
 mkdir -p "$LOGDIR"
 TORCHRUN=(python -m torch.distributed.run --standalone --nproc_per_node="$NPROC" --tee 3 --log-dir "$LOGDIR")
-# device-batch-size=64 on 4x96GB: 64*2048*4 = 524288 tokens, grad accum 1.
-# 32 left ~8GB/96GB used and needed 2 accum steps.
+# device-batch-size=32: after compile this d16 run uses ~50GB/96GB at 100% util.
+# 64 would drop grad accum to 1 but roughly doubles activations and may OOM.
 "${TORCHRUN[@]}" -m scripts.base_train \
     --depth=16 \
-    --device-batch-size=64 \
+    --device-batch-size=32 \
     --window-pattern=L \
     --target-param-data-ratio=12
 
