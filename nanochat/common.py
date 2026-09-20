@@ -9,8 +9,11 @@ import logging
 
 # torchrun -m inserts a "--" separator so --run is not parsed as --run-path.
 # conda torch 2.12 leaves that "--" in the child argv; argparse rejects it.
-if len(sys.argv) > 1 and sys.argv[1] == "--":
-    sys.argv.pop(1)
+# It may not be argv[1] when launched as `python -m`.
+try:
+    sys.argv.pop(sys.argv.index("--", 1))
+except ValueError:
+    pass
 import urllib.request
 import torch
 import torch.distributed as dist
