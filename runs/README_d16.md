@@ -7,7 +7,7 @@ Cache directory: `NANOCHAT_BASE_DIR` (AutoDL data disk `/root/autodl-tmp/nanocha
 ## No-GPU machine
 
 ```bash
-git clone https://github.com/Icyjerry/nanochat.git
+git clone -b d16-autodl https://github.com/Icyjerry/nanochat.git
 cd nanochat
 export NANOCHAT_BASE_DIR=/root/autodl-tmp/nanochat-d16
 bash runs/rund16_prep.sh
