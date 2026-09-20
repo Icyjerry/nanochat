@@ -94,8 +94,7 @@ TORCHRUN=(python -m torch.distributed.run --standalone --nproc_per_node="$NPROC"
     --depth=16 \
     --device-batch-size=64 \
     --window-pattern=L \
-    --target-param-data-ratio=12 \
-    --save-every=1000
+    --target-param-data-ratio=12
 
 "${TORCHRUN[@]}" -m scripts.base_eval \
     --device-batch-size=16
