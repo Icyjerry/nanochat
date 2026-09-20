@@ -40,7 +40,7 @@ NANOCHAT_LIGHT_DEPS=(
 
 find_cuda_python() {
     local cand
-    for cand in python python3 /root/miniconda3/bin/python; do
+        for cand in python /root/miniconda3/bin/python /root/miniconda3/bin/python3 python3; do
         if command -v "$cand" >/dev/null 2>&1 && "$cand" -c "import torch; assert torch.cuda.is_available()" >/dev/null 2>&1; then
             command -v "$cand"
             return 0
@@ -65,7 +65,11 @@ setup_python_env() {
     command -v uv &> /dev/null || curl -LsSf https://astral.sh/uv/install.sh | sh
     if use_system_torch; then
         local py
-        py="$(find_cuda_python || command -v python3)"
+        py="$(find_cuda_python)" || {
+            echo "No CUDA torch on PATH. Tried python, python3, /root/miniconda3/bin/python."
+            echo "Check: nvidia-smi && /root/miniconda3/bin/python -c 'import torch; print(torch.__version__, torch.cuda.is_available())'"
+            exit 1
+        }
         echo "Using system/conda CUDA torch via $py (skip uv GPU torch wheels)"
         "$py" - <<'PY'
 import torch
