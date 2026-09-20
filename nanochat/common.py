@@ -3,8 +3,14 @@ Common utilities for nanochat.
 """
 
 import os
+import sys
 import re
 import logging
+
+# torchrun -m inserts a "--" separator so --run is not parsed as --run-path.
+# conda torch 2.12 leaves that "--" in the child argv; argparse rejects it.
+if len(sys.argv) > 1 and sys.argv[1] == "--":
+    sys.argv.pop(1)
 import urllib.request
 import torch
 import torch.distributed as dist

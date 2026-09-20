@@ -79,7 +79,7 @@ wait "$DATASET_DOWNLOAD_PID"
 # target-param-data-ratio=12 is the current master default, pinned so it cannot drift.
 # Fewer GPUs keep the same token budget; gradient accumulation fills the global batch.
 # The "--" after -m is required: torch 2.12 torchrun treats --run as --run-path.
-# Do not pass that "--" to `python -m` (argparse rejects it).
+# nanochat.common strips that "--" from child argv so argparse still works.
 torchrun --standalone --nproc_per_node=$NPROC -m scripts.base_train -- \
     --depth=16 \
     --device-batch-size=32 \
