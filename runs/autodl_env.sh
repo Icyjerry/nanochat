@@ -40,8 +40,8 @@ NANOCHAT_LIGHT_DEPS=(
 
 find_cuda_python() {
     local cand
-        for cand in python /root/miniconda3/bin/python /root/miniconda3/bin/python3 python3; do
-        if command -v "$cand" >/dev/null 2>&1 && "$cand" -c "import torch; assert torch.cuda.is_available()" >/dev/null 2>&1; then
+    for cand in python /root/miniconda3/bin/python /root/miniconda3/bin/python3 python3; do
+        if command -v "$cand" >/dev/null 2>&1 && "$cand" -c "import torch; assert torch.version.cuda is not None" >/dev/null 2>&1; then
             command -v "$cand"
             return 0
         fi
@@ -66,14 +66,14 @@ setup_python_env() {
     if use_system_torch; then
         local py
         py="$(find_cuda_python)" || {
-            echo "No CUDA torch on PATH. Tried python, python3, /root/miniconda3/bin/python."
-            echo "Check: nvidia-smi && /root/miniconda3/bin/python -c 'import torch; print(torch.__version__, torch.cuda.is_available())'"
+            echo "No CUDA-built torch on PATH (need torch.version.cuda, GPUs not required for prep)."
+            echo "Check: /root/miniconda3/bin/python -c 'import torch; print(torch.__version__, torch.version.cuda)'"
             exit 1
         }
         echo "Using system/conda CUDA torch via $py (skip uv GPU torch wheels)"
         "$py" - <<'PY'
 import torch
-print("system torch:", torch.__version__, "cuda:", torch.cuda.is_available(), "n:", torch.cuda.device_count())
+print("system torch:", torch.__version__, "cuda_build:", torch.version.cuda, "available:", torch.cuda.is_available(), "n:", torch.cuda.device_count())
 PY
         if [ ! -f .venv/.system-torch ]; then
             rm -rf .venv
@@ -85,10 +85,9 @@ PY
         uv pip install "${NANOCHAT_LIGHT_DEPS[@]}"
         python - <<'PY'
 import torch
-print("venv torch:", torch.__version__, "cuda:", torch.cuda.is_available(), "n:", torch.cuda.device_count())
-assert torch.cuda.is_available(), "venv is not seeing conda CUDA torch; recreate with --system-site-packages"
-print("CUDA built:", torch.version.cuda)
-print("GPU count:", torch.cuda.device_count())
+print("venv torch:", torch.__version__, "cuda_build:", torch.version.cuda, "available:", torch.cuda.is_available(), "n:", torch.cuda.device_count())
+assert torch.version.cuda is not None, "venv is not seeing a CUDA-built torch"
+print("GPU count:", torch.cuda.device_count(), "(0 is ok on a no-GPU AutoDL box)")
 PY
     else
         echo "Installing lockfile torch via uv sync --extra gpu"
