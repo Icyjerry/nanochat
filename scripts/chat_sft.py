@@ -65,6 +65,8 @@ parser.add_argument("--chatcore-max-sample", type=int, default=24, help="max pro
 parser.add_argument("--mmlu-epochs", type=int, default=3, help="number of epochs of MMLU in training mixture (teaches Multiple Choice)")
 parser.add_argument("--gsm8k-epochs", type=int, default=4, help="number of epochs of GSM8K in training mixture (teaches Math and Tool Use)")
 args = parser.parse_args()
+if os.environ.get("WANDB_RUN"):
+    args.run = os.environ["WANDB_RUN"]
 user_config = vars(args).copy()
 # -----------------------------------------------------------------------------
 

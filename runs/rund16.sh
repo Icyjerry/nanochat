@@ -19,6 +19,7 @@ export NANOCHAT_BASE_DIR
 source "$(dirname "$0")/autodl_env.sh"
 trap restore_uv_lock EXIT
 export OMP_NUM_THREADS=1
+export PYTHONUNBUFFERED=1
 mkdir -p "$NANOCHAT_BASE_DIR"
 
 NPROC="${NPROC:-2}"
@@ -78,25 +79,25 @@ wait "$DATASET_DOWNLOAD_PID"
 # d16 / BF16. window-pattern=L because Blackwell usually has no FA3.
 # target-param-data-ratio=12 is the current master default, pinned so it cannot drift.
 # Fewer GPUs keep the same token budget; gradient accumulation fills the global batch.
-# The "--" after -m is required: torch 2.12 torchrun treats --run as --run-path.
-# nanochat.common strips that "--" from child argv so argparse still works.
-torchrun --standalone --nproc_per_node=$NPROC --tee 3 -m scripts.base_train -- \
+# Do not pass "--run=..." to torchrun: torch 2.12 treats it as --run-path.
+# Do not insert "--" after -m: argparse in the child rejects it.
+# Wandb name comes from WANDB_RUN (see scripts).
+LOGDIR="$NANOCHAT_BASE_DIR/torchrun_logs"
+mkdir -p "$LOGDIR"
+torchrun --standalone --nproc_per_node=$NPROC --tee 3 --log-dir "$LOGDIR" -m scripts.base_train \
     --depth=16 \
     --device-batch-size=32 \
     --window-pattern=L \
-    --target-param-data-ratio=12 \
-    --run="$WANDB_RUN"
+    --target-param-data-ratio=12
 
-torchrun --standalone --nproc_per_node=$NPROC --tee 3 -m scripts.base_eval -- \
+torchrun --standalone --nproc_per_node=$NPROC --tee 3 --log-dir "$LOGDIR" -m scripts.base_eval \
     --device-batch-size=16
 
-torchrun --standalone --nproc_per_node=$NPROC --tee 3 -m scripts.chat_sft -- \
-    --run="$WANDB_RUN"
-torchrun --standalone --nproc_per_node=$NPROC --tee 3 -m scripts.chat_eval -- -i sft
+torchrun --standalone --nproc_per_node=$NPROC --tee 3 --log-dir "$LOGDIR" -m scripts.chat_sft
+torchrun --standalone --nproc_per_node=$NPROC --tee 3 --log-dir "$LOGDIR" -m scripts.chat_eval -i sft
 
-torchrun --standalone --nproc_per_node=$NPROC --tee 3 -m scripts.chat_rl -- \
-    --run="$WANDB_RUN"
-torchrun --standalone --nproc_per_node=$NPROC --tee 3 -m scripts.chat_eval -- -i rl -a GSM8K
+torchrun --standalone --nproc_per_node=$NPROC --tee 3 --log-dir "$LOGDIR" -m scripts.chat_rl
+torchrun --standalone --nproc_per_node=$NPROC --tee 3 --log-dir "$LOGDIR" -m scripts.chat_eval -i rl -a GSM8K
 
 echo "ALL DONE"
 date -u +"end_utc=%Y-%m-%dT%H:%M:%SZ" | tee -a "$NANOCHAT_BASE_DIR/run_meta.txt"

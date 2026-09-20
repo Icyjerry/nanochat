@@ -58,6 +58,8 @@ parser.add_argument("--eval-every", type=int, default=60, help="evaluate pass@k 
 parser.add_argument("--eval-examples", type=int, default=400, help="number of examples for pass@k evaluation")
 parser.add_argument("--save-every", type=int, default=60, help="save checkpoint every N steps")
 args = parser.parse_args()
+if os.environ.get("WANDB_RUN"):
+    args.run = os.environ["WANDB_RUN"]
 user_config = vars(args).copy()
 # -----------------------------------------------------------------------------
 
