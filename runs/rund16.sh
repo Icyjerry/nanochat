@@ -16,7 +16,8 @@ if [ -z "${NANOCHAT_BASE_DIR:-}" ]; then
     fi
 fi
 export NANOCHAT_BASE_DIR
-export HF_ENDPOINT="${HF_ENDPOINT:-https://hf-mirror.com}"
+source "$(dirname "$0")/autodl_env.sh"
+trap restore_uv_lock EXIT
 export OMP_NUM_THREADS=1
 mkdir -p "$NANOCHAT_BASE_DIR"
 
@@ -24,7 +25,9 @@ NPROC=4
 
 command -v uv &> /dev/null || curl -LsSf https://astral.sh/uv/install.sh | sh
 [ -d ".venv" ] || uv venv
+rewrite_uv_lock_to_mirrors
 uv sync --extra gpu
+restore_uv_lock
 source .venv/bin/activate
 
 if [ -z "${WANDB_RUN:-}" ]; then

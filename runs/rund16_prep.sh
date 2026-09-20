@@ -16,12 +16,16 @@ if [ -z "${NANOCHAT_BASE_DIR:-}" ]; then
     fi
 fi
 export NANOCHAT_BASE_DIR
-export HF_ENDPOINT="${HF_ENDPOINT:-https://hf-mirror.com}"
+# defaults: hf-mirror + tuna; sourced file may set HF_ENDPOINT again
+source "$(dirname "$0")/autodl_env.sh"
+trap restore_uv_lock EXIT
 export OMP_NUM_THREADS=1
 mkdir -p "$NANOCHAT_BASE_DIR"
 
 echo "NANOCHAT_BASE_DIR=$NANOCHAT_BASE_DIR"
 echo "HF_ENDPOINT=$HF_ENDPOINT"
+echo "UV_DEFAULT_INDEX=$UV_DEFAULT_INDEX"
+echo "PYTORCH_WHEEL_MIRROR=$PYTORCH_WHEEL_MIRROR"
 echo "git commit: $(git rev-parse HEAD)"
 git rev-parse HEAD > "$NANOCHAT_BASE_DIR/git_commit.txt"
 git status --short > "$NANOCHAT_BASE_DIR/git_status.txt" || true
@@ -29,7 +33,9 @@ date -u +"prep_start_utc=%Y-%m-%dT%H:%M:%SZ" | tee "$NANOCHAT_BASE_DIR/prep_meta
 
 command -v uv &> /dev/null || curl -LsSf https://astral.sh/uv/install.sh | sh
 [ -d ".venv" ] || uv venv
+rewrite_uv_lock_to_mirrors
 uv sync --extra gpu
+restore_uv_lock
 source .venv/bin/activate
 
 python - <<'PY'
